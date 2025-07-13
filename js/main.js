@@ -233,29 +233,41 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- INICIO: Código para el visor de imágenes (Lightbox) ---
-    const logoLinks = document.querySelectorAll('.logo-version a');
+    // Selector unificado para todos los elementos que deben abrir el visor
+    const lightboxTriggers = document.querySelectorAll('.logo-version a, .resource-icon img');
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
     const closeBtn = document.querySelector('.lightbox-close');
 
-    if (logoLinks.length > 0 && lightbox && lightboxImg && closeBtn) {
-        logoLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault(); // Prevenir la navegación
-                
-                // Obtener la URL de la imagen del enlace
-                const imgSrc = this.getAttribute('href');
-                lightboxImg.setAttribute('src', imgSrc);
-                
-                // Mostrar el visor
-                lightbox.style.display = 'flex';
-            });
+    // Función para abrir el visor
+    const openLightbox = function(e) {
+        e.preventDefault(); // Prevenir comportamiento por defecto
+        const element = e.currentTarget;
+        let imgSrc;
+
+        // Obtener la URL de la imagen según el tipo de elemento
+        if (element.tagName === 'A') {
+            imgSrc = element.getAttribute('href');
+        } else if (element.tagName === 'IMG') {
+            imgSrc = element.getAttribute('src');
+        }
+
+        if (imgSrc) {
+            lightboxImg.setAttribute('src', imgSrc);
+            lightbox.style.display = 'flex';
+        }
+    };
+
+    if (lightboxTriggers.length > 0 && lightbox && lightboxImg && closeBtn) {
+        // Asignar el evento a todos los disparadores
+        lightboxTriggers.forEach(trigger => {
+            trigger.addEventListener('click', openLightbox);
         });
 
         // Función para cerrar el visor
         const closeLightbox = function() {
             lightbox.style.display = 'none';
-            lightboxImg.setAttribute('src', ''); // Limpiar la imagen
+            lightboxImg.setAttribute('src', ''); // Limpiar la imagen para liberar memoria
         }
 
         // Cerrar al hacer clic en el botón de cerrar
@@ -264,6 +276,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Cerrar al hacer clic fuera de la imagen (en el fondo)
         lightbox.addEventListener('click', function(e) {
             if (e.target === lightbox) {
+                closeLightbox();
+            }
+        });
+
+        // Cerrar con la tecla 'Escape'
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && lightbox.style.display === 'flex') {
                 closeLightbox();
             }
         });
